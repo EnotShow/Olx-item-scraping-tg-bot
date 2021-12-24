@@ -24,12 +24,12 @@ def telegram_bot():
     def result_to_user(call):
         bot.send_message(call.message.chat.id, 'Начал парсинг')
         while True:
-            bot.send_message(call.message.chat.id, send_to_user())
+            bot.send_message(call.message.chat.id, aggregator())
 
     bot.polling()
 
 
 if __name__ == '__main__':
-    from bot_scraping.main import *
+    from main import *
 
     telegram_bot()
