@@ -1,16 +1,15 @@
 import telebot
 from telebot import types
 
-
-def get_token_from_file():
-    with open('token.txt', encoding='UTF-8') as file:
-        bot_token = file.readlines()
-        bot_token = ''.join(bot_token)
-        return bot_token
+from data_importers import get_token_from_file
 
 
 def telegram_bot():
     bot = telebot.TeleBot(get_token_from_file())
+
+    @bot.message_handler(commands=['stop'])
+    def stop_scraping_from_main():
+        stop_scraping()
 
     @bot.message_handler(commands=['start'])
     def start_message(message):
@@ -18,13 +17,21 @@ def telegram_bot():
         button = types.InlineKeyboardButton('Start', callback_data='/start_scraping')
         markup_inline.add(button)
 
-        bot.send_message(message.chat.id, "Нажми 'Start' что бы начать", reply_markup=markup_inline)
+        bot.send_message(
+            message.chat.id,
+            "Нажми 'Start' что бы начать",
+            reply_markup=markup_inline
+        )
 
     @bot.callback_query_handler(func=lambda call: True)
-    def result_to_user(call):
-        bot.send_message(call.message.chat.id, 'Начал парсинг')
+    def sender(call):
+        bot.send_message(
+            call.message.chat.id,
+            "Начал парсинг \nЧто бы остановить парсинг нажми /stop"
+        )
         while True:
-            bot.send_message(call.message.chat.id, aggregator())
+            bot_message = sent_to_user
+            bot.send_message(call.message.chat.id, bot_message())
 
     bot.polling()
 

@@ -3,47 +3,19 @@ import requests
 from fake_useragent import UserAgent
 import time
 
-
-# Функция делает список из наших ссылок, которые хранятся в 'url.txt' для дальнейшего использования
-def get_urls_from_file():
-    user_urls = []
-    try:
-        with open('url.txt', encoding='UTF-8') as file:
-            lines = file.readlines()
-            for i in lines:
-                user_urls.append(i.strip())
-
-        return user_urls
-    except AttributeError('None attributes') as e:
-        print(e)
-        return Exception(e)
-
-
-# Переменная которая получает данные нужные для отправки и отправляет их боту(TODO переименовать)
-def aggregator():
-    # product_title = get_item(0)
-    # while True:
-    #     if get_item(0) == product_title:
-    #         time.sleep(10)
-    #     elif get_item(1):
-    #         result = get_item(1)
-    #         return result
-    #     else:
-    #         return 'Обработчик вернул ошибку !!!'
-    change_finder = sent_to_user()
-    to_sent = get_item(change_finder)
-    return to_sent
+from data_importers import get_urls_from_file
 
 
 # Функция парсер, которая парсит первый элемент с выдачи OLX
-def get_item(code_list=[False]):
-    print(code_list)
+def get_scrap(code_list='No list', index='Null'):
+    print('Код лист :', code_list)
     ua = UserAgent
+
+    title_list = []
+    href_list = []
     # Если ссылки есть продолжает работу, иначе возвращает ошибку
     try:
         urls = get_urls_from_file()
-        title_list = []
-        href_list = []
         for i in urls:
             req = requests.get(
                 url=i,
@@ -51,57 +23,73 @@ def get_item(code_list=[False]):
             ).text
             # Импортируем парсер
             soup = BeautifulSoup(req, 'lxml')
-            # Получаем названия и ссылку первого элемент из списка выдачи
+            # Получаем названия и ссылку первого элемент из списка выдачи и добавляем его в лист
+            # Если его нет возвращаем "None"
+            try:
+                get_title = soup.find(class_='lheight22 margintop5').find('a')
+            # TODO узнать какой ексепшн
+            except Exception:
+                title_list.append('None')
+            else:
+                title_list.append(get_title.text.strip())
             get_href = soup.find(class_='space rel').find_all('a')
-            get_title = soup.find(class_='lheight22 margintop5').find('a')
-            # Получаем список из названий и ссылок
-            title_list.append(get_title.text.strip())
             for i in get_href:
                 href_list.append(i.get('href'))
-            # Код который использовался раньше
-            # if code == 1:
-            #     for i in get_href:
-            #         return f'{get_title.text.strip()} {i.get("href")}'
-            # elif code == 0:
-            #     return get_title.text.strip()
+            print('get_scrap titles ', title_list)
         # Если не получаем список на вход, возвращает список названий
-        if code_list == [False]:
+        if code_list == 'No list':
+            print('Возвращает лист', title_list)
             return title_list
         # Если получает список на вход(мы отправляем только списки содержащие единицы)
         elif 1 in code_list:
-            index = 0
             for i in code_list:
                 if i == 1:
                     current_titles[index] = title_list[index]
                     to_sent = f'{title_list[index]} {href_list[index]}'
-                    print(to_sent)
+                    index += 1
+                    print('Данные для отправки', to_sent)
                     return to_sent
 
     except AttributeError('None attributes') as e:
         return Exception(e)
 
 
-# Глобальная переменная которая при запуске получает список значений, затем лишь изменяет их
-current_titles = get_item()
-print(current_titles)
-
-
-# Переменная которая подготавливает данные которые нужно отправить пользователю (TODO переименовать)
-def sent_to_user():
-    current_titlesF = current_titles
+# Переменная которая подготавливает данные которые нужно отправить пользователю
+def prepare_to_sent():
+    func_current_title = current_titles
     answer = []
-    for i in get_item():
+    index = 0
+    for i in get_scrap():
         answer.append(0)
-    while True:
-        index = 0
-        current_req = get_item()
-        for i in current_titlesF:
-            for j in current_req:
-                if i[index] == j[index]:
-                    index += 1
-                    time.sleep(1)
-                    continue
-                elif i[index] != j[index]:
-                    answer[index] = 1
-                    index += 1
-                    return answer
+        print('Prepare to sent answer append 0')
+    current_req = get_scrap
+    for i in func_current_title:
+        for j in current_req():
+            if i[index] == j[index]:
+                index += 1
+                time.sleep(1)
+                continue
+            elif i[index] != j[index]:
+                answer[index] = 1
+                print(f'{answer} ответ от prepare to sent {index}')
+                return answer, index
+
+
+# Переменная которая получает данные нужные для отправки и отправляет их боту
+def sent_to_user():
+    change_finder, index = prepare_to_sent()
+    to_sent = get_scrap(code_list=change_finder, index=index)
+    return to_sent
+
+
+# Функция останавливает отправку парсов пользователю
+def stop_scraping():
+    exit(sent_to_user())
+
+
+# Конец функций
+
+# Глобальная переменная которая при запуске получает список значений, затем лишь изменяет их
+current_titles = get_scrap()
+print('Current titles задана', current_titles)
+
