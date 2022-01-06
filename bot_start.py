@@ -7,10 +7,6 @@ from data_importers import get_token_from_file
 def telegram_bot():
     bot = telebot.TeleBot(get_token_from_file())
 
-    @bot.message_handler(commands=['stop'])
-    def stop_scraping_from_main():
-        stop_scraping()
-
     @bot.message_handler(commands=['start'])
     def start_message(message):
         markup_inline = types.InlineKeyboardMarkup()
@@ -27,11 +23,21 @@ def telegram_bot():
     def sender(call):
         bot.send_message(
             call.message.chat.id,
-            "Начал парсинг \nЧто бы остановить парсинг нажми /stop"
+            "Начал парсинг"
         )
         while True:
             bot_message = sent_to_user
             bot.send_message(call.message.chat.id, bot_message())
+
+    @bot.message_handler(commands=['start_scraping'])
+    def sender_to(message):
+        bot.send_message(
+            message.chat.id,
+            "Начал парсинг"
+        )
+        while True:
+            bot_message = sent_to_user
+            bot.send_message(message.chat.id, bot_message())
 
     bot.polling()
 
