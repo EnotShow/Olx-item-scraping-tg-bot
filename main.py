@@ -51,8 +51,6 @@ def get_scrap(code_list='No list', index='Null'):
                     index += 1
                     print('Данные для отправки', to_sent)
                     return to_sent
-        else:
-            sent_to_user()
 
     except AttributeError('None attributes') as e:
         return Exception(e)

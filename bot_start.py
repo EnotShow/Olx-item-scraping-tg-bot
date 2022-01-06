@@ -26,8 +26,12 @@ def telegram_bot():
             "Начал парсинг"
         )
         while True:
-            bot_message = sent_to_user
-            bot.send_message(call.message.chat.id, bot_message())
+            bot_message = sent_to_user()
+            if not bot_message:
+                print('Bot message is empty')
+                continue
+            else:
+                bot.send_message(call.message.chat.id, bot_message)
 
     @bot.message_handler(commands=['start_scraping'])
     def sender_to(message):
@@ -36,8 +40,12 @@ def telegram_bot():
             "Начал парсинг"
         )
         while True:
-            bot_message = sent_to_user
-            bot.send_message(message.chat.id, bot_message())
+            bot_message = sent_to_user()
+            if not bot_message:
+                print('Bot message is empty')
+                continue
+            else:
+                bot.send_message(message.chat.id, bot_message)
 
     bot.polling()
 
